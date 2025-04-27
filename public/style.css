@@ -1,0 +1,83 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #2B7A78;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.panel {
+    background-color: #fff;
+    padding: 2.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    width: 320px;
+}
+
+.panel h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #17252A;
+    font-size: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: #3AAFA9;
+    font-weight: 600;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    border: 1px solid #3AAFA9;
+    outline: none;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #3AAFA9;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2B7A78;
+}
+
+.signup-link {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.signup-link a {
+    color: #3AAFA9;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.signup-link a:hover {
+    color: #2B7A78;
+}

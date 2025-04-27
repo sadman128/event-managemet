@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Request Event</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2B7A78;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-inline: 1rem;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            background-color: #ffffff;
+            padding: 2rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        h2 {
+            text-align: center;
+            color: #17252A;
+            margin-bottom: 1rem;
+        }
+
+        form {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #3AAFA9;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select,
+        input[type="date"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #3AAFA9;
+            border-radius: 6px;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+            line-height: 1.5;
+        }
+
+        select {
+            appearance: none;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            background-color: #ffffff;
+            color: #3AAFA9;
+            border: 2px solid #3AAFA9;
+            padding: 0.75rem;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #3AAFA9;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Request an Event</h2>
+    <form id="eventForm">
+        <div class="form-group">
+            <label for="title">Event Title</label>
+            <input type="text" id="title" name="title" required />
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description (add any other information here)</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Your Email (Must be filled)</label>
+            <input type="email" id="email" name="email" required />
+        </div>
+
+        <div class="form-group">
+            <label for="venue">Select Venue (Check Drop Down)</label>
+            <select id="venue" name="venue" required></select>
+        </div>
+
+        <div class="form-group">
+            <label for="service">Select Service (Check Drop Down)</label>
+            <select id="service" name="service" required></select>
+        </div>
+
+        <div class="form-group">
+            <label for="service">Service Charge is additionally added with Venue rent</label>
+        </div>
+
+        <div class="form-group">
+            <label for="date">Event Date</label>
+            <input type="date" id="date" name="date" required />
+        </div>
+
+        <button type="submit">Submit Request</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        async function populateDropdowns() {
+            try {
+                const venueRes = await fetch('/api/venues');
+                const venues = await venueRes.json();
+                const venueSelect = document.getElementById('venue');
+                venues.forEach(venue => {
+                    const option = document.createElement('option');
+                    option.value = venue.id;
+                    option.textContent = `${venue.name} - ${venue.location}, ${venue.capacity} People, Rent: ${venue.price_per_hour} Tk/day`;
+                    venueSelect.appendChild(option);
+                });
+
+                const serviceRes = await fetch('/api/services');
+                const services = await serviceRes.json();
+                const serviceSelect = document.getElementById('service');
+                services.forEach(service => {
+                    const option = document.createElement('option');
+                    option.value = service.id;
+                    option.textContent = `${service.name} - ${service.description} (${service.price}Tk/hr - Excluding Management Hours)`;
+                    serviceSelect.appendChild(option);
+                });
+            } catch (err) {
+                console.error("Failed to fetch venues/services", err);
+            }
+        }
+
+        populateDropdowns();
+
+        document.getElementById('eventForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const data = {
+                title: this.title.value,
+                description: this.description.value,
+                venue_id: this.venue.value,
+                service_id: this.service.value,
+                date: this.date.value,
+                email: this.email.value,
+            };
+
+            const res = await fetch('/api/request-event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                alert('Event request submitted!');
+                this.reset();
+            } else {
+                alert('Error submitting request.');
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

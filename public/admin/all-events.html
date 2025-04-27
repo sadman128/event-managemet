@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Events</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .status-scheduled { color: #ffc107; font-weight: bold; }
+    .status-completed { color: #007bff; font-weight: bold; }
+    .status-cancelled { color: #dc3545; font-weight: bold; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    th {
+      background-color: #267b88;
+      color: white;
+    }
+
+    .actions button {
+      padding: 5px 10px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .complete-btn {
+      background-color: #007bff;
+    }
+
+    .cancel-btn {
+      background-color: #dc3545;
+    }
+
+    .actions button:hover {
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  All Events
+</header>
+
+<nav class="nav">
+  <a href="dashboard.html">Dashboard</a>
+  <a href="pending-requests.html">Pending Requests</a>
+  <a href="../login.html">Logout</a>
+</nav>
+
+<div class="container">
+  <table id="eventsTable">
+    <thead>
+    <tr>
+      <th>Event Title</th>
+      <th>Date</th>
+      <th>Venue</th>
+      <th>Service</th>
+      <th>User Name</th>
+      <th>User Phone</th>
+      <th>User Email</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- Filled by JS -->
+    </tbody>
+  </table>
+</div>
+
+<script>
+  async function fetchEvents() {
+    try {
+      const res = await fetch('/api/admin/events');
+      const data = await res.json();
+      const tbody = document.querySelector('#eventsTable tbody');
+      tbody.innerHTML = '';
+
+      for (const status of ['scheduled', 'completed', 'cancelled']) {
+        if (Array.isArray(data[status])) {
+          for (const event of data[status]) {
+            const res = await fetch(`/api/admin/user/${event.email}`);
+            const user = await res.json();
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${event.title}</td>
+              <td>${new Date(event.date).toISOString().split('T')[0]}</td>
+              <td>${event.venue_name}</td>
+              <td>${event.service_name}</td>
+              <td>${user.name}</td>
+                <td>${user.phone}</td>
+                <td>${user.email}</td>
+              <td class="status-${event.status}">${event.status.charAt(0).toUpperCase() + event.status.slice(1)}</td>
+              <td class="actions">
+                ${status === 'scheduled' ? `
+                  <button class="complete-btn" onclick="updateStatus(${event.id}, 'completed')">Mark as Completed</button>
+                  <button class="cancel-btn" onclick="updateStatus(${event.id}, 'cancelled')">Cancel</button>
+                ` : ''}
+              </td>
+            `;
+            tbody.appendChild(row);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      alert('Failed to load events.');
+    }
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      const res = await fetch(`/api/admin/events/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+
+      if (res.ok) {
+        alert(`Status updated to ${status}`);
+        fetchEvents();
+      } else {
+        throw new Error('Failed to update');
+      }
+    } catch (err) {
+      console.error('Error updating status:', err);
+      alert('Failed to update event status.');
+    }
+  }
+
+  fetchEvents();
+</script>
+
+</body>
+</html>

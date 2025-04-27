@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="container">
+  <div class="panel user-panel">
+    <form id="signupForm">
+      <h2>User Signup</h2>
+      <input type="text" name="name" placeholder="Full Name" required />
+      <input type="email" name="email" placeholder="Email Address" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <input type="tel" name="phone" placeholder="Phone Number" required />
+      <input type="text" name="address" placeholder="Address" required />
+
+      <button type="submit">Sign Up</button>
+      <p>Already have an account? <a href="login.html">Login here</a></p>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.getElementById("signupForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const form = e.target;
+    const data = {
+      name: form.name.value,
+      email: form.email.value,
+      password: form.password.value,
+      phone: form.phone.value,
+      address: form.address.value,
+    };
+
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert(result.message);
+        window.location.href = "login.html";
+      } else {
+        alert(result.message || "Signup failed.");
+      }
+    } catch (err) {
+      console.error("Signup failed:", err);
+      alert("Something went wrong.");
+    }
+  });
+</script>
+</body>
+</html>

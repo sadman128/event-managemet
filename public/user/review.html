@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Review Section</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2B7A78;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .review-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            width: 90%;
+            max-width: 1200px;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .left-panel, .right-panel {
+            flex: 1 1 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: auto;
+        }
+
+        .left-panel input,
+        .left-panel textarea,
+        .left-panel select {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .left-panel button {
+            padding: 12px;
+            background-color: #3AAFA9;
+            color: white;
+            border: none;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .left-panel button:hover {
+            background-color: #2B7A78;
+        }
+
+        #reviewsList {
+            overflow-y: auto;
+            flex: 1;
+            margin-top: 10px;
+        }
+
+        .review-item {
+            background: #eef5ff;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 900px) {
+            .review-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+    </style>
+</head>
+<body>
+<div class="review-container">
+    <div class="left-panel">
+        <h2>Leave a Review</h2>
+        <input type="text" id="nameInput" placeholder="Your Name">
+        <select id="pointInput">
+            <option value="">Rate Us</option>
+            <option value="5">5 ★</option>
+            <option value="4">4 ★</option>
+            <option value="3">3 ★</option>
+            <option value="2">2 ★</option>
+            <option value="1">1 ★</option>
+        </select>
+        <textarea id="detailInput" placeholder="Write your review here..."></textarea>
+        <button onclick="submitReview()">Submit Review</button>
+    </div>
+    <div class="right-panel">
+        <h2>Reviews</h2>
+        <div id="reviewsList"></div>
+    </div>
+</div>
+
+<script>
+    let eventId = null;
+
+    window.onload = () => {
+        const params = new URLSearchParams(window.location.search);
+        eventId = params.get('event_id'); // <- event_id in URL
+
+        if (!eventId) {
+            alert('No event selected for review.');
+            window.location.href = '/my-requests.html';
+        }
+
+        fetchReviews();
+    }
+
+    async function fetchReviews() {
+        try {
+            const res = await fetch(`/api/reviews?event_id=${eventId}`);
+            const data = await res.json();
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = '';
+
+            data.forEach(review => {
+                const div = document.createElement('div');
+                div.className = 'review-item';
+                div.innerHTML = `<strong>${review.name}</strong> (${review.point} ★)<br>${review.detail}`;
+                reviewsList.appendChild(div);
+            });
+        } catch (err) {
+            console.error('Error loading reviews:', err);
+        }
+    }
+
+    async function submitReview() {
+        const name = document.getElementById('nameInput').value.trim();
+        const point = document.getElementById('pointInput').value;
+        const detail = document.getElementById('detailInput').value.trim();
+
+        if (!name || !point || !detail) {
+            alert('Please fill in all fields!');
+            return;
+        }
+
+        const response = await fetch('/api/give-reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, point, detail, event_id: eventId })
+        });
+
+        if (response.ok) {
+            document.getElementById('nameInput').value = '';
+            document.getElementById('pointInput').value = '';
+            document.getElementById('detailInput').value = '';
+            fetchReviews();
+        } else {
+            alert('Failed to submit review.');
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login - Event Management</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <div class="panel user-panel">
+        <form id="loginForm">
+            <h2>Login</h2>
+
+            <label for="email">Email:</label>
+            <input type="email" name="email" id="email" required />
+
+            <label for="password">Password:</label>
+            <input type="password" name="password" id="password" required />
+
+            <label for="role">Login as:</label>
+            <select name="role" id="role" onchange="toggleSignup()">
+                <option value="user" selected>User</option>
+                <option value="admin">Admin</option>
+            </select>
+
+            <button type="submit">Login</button>
+
+            <div id="signupLink" class="signup-link">
+                <span>New here? <a href="/signup.html">Sign up</a></span>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleSignup() {
+        const roleSelect = document.getElementById('role');
+        const signupLink = document.getElementById('signupLink');
+        signupLink.style.display = roleSelect.value === 'user' ? 'block' : 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', toggleSignup);
+
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const role = document.getElementById("role").value;
+
+        const response = await fetch("/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password, role })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            // Redirect based on role
+            if (role === "admin") {
+                window.location.href = "/admin/dashboard.html";
+            } else {
+                window.location.href = "/user/dashboard.html";
+            }
+        } else {
+            alert(result.message || "Login failed.");
+        }
+    });
+</script>
+</body>
+</html>

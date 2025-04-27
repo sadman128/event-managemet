@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>My Event Requests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #2B7A78;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-inline: 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 3rem auto;
+            background: #ffffff;
+            padding: 2rem 4rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            color: #17252A;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #3AAFA9;
+        }
+
+        .form-group input[type="email"],
+        .form-group select,
+        button {
+            padding: 0.75rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            border: 1px solid #3AAFA9;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+            color: #17252A;
+            transition: 0.2s ease;
+        }
+
+        button {
+            margin-top: 0.5rem;
+            font-weight: 600;
+            background-color: #ffffff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #3AAFA9;
+            color: #ffffff;
+        }
+
+        .results {
+            margin-top: 2rem;
+        }
+
+        .event-card {
+            background-color: #f9f9f9;
+            border-left: 4px solid #3AAFA9;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+        }
+
+        .event-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: #17252A;
+        }
+
+        .event-card p {
+            margin: 0.25rem 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>My Event Requests</h2>
+    <div class="form-group">
+        <label for="email">Enter Your Email:</label>
+        <input type="email" id="email" required />
+    </div>
+
+    <div class="form-group">
+        <label for="sort">Sort By:</label>
+        <select id="sort" onchange="fetchRequests()">
+            <option value="date">Date</option>
+            <option value="name">Name</option>
+            <option value="status">Status</option>
+        </select>
+    </div>
+
+    <button onclick="fetchRequests()">Search</button>
+
+    <div class="results" id="results"></div>
+</div>
+
+<script>
+    async function fetchRequests() {
+        const email = document.getElementById("email").value.trim();
+        const sortBy = document.getElementById("sort").value;
+
+        if (!email) {
+            alert("Please enter your email.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/my-requests?email=${encodeURIComponent(email)}`);
+            const data = await res.json();
+
+            const resultsContainer = document.getElementById("results");
+            resultsContainer.innerHTML = "";
+
+            if (!Array.isArray(data) || data.length === 0) {
+                resultsContainer.innerHTML = "<p>No event requests found.</p>";
+                return;
+            }
+
+            // Sort based on dropdown selection
+            if (sortBy === "name") {
+                data.sort((a, b) => a.title.localeCompare(b.title));
+            } else if (sortBy === "date") {
+                data.sort((a, b) => new Date(a.date) - new Date(b.date));
+            } else if (sortBy === "status") {
+                data.sort((a, b) => a.status.localeCompare(b.status));
+            }
+
+            for (const event of data) {
+                const card = document.createElement("div");
+                card.className = "event-card";
+
+                let reviewButtonHTML = "";
+
+                if (event.status.toLowerCase() === "completed") {
+                    const hasReview = await checkReviewExists(event.id);
+
+                    if (hasReview) {
+                        reviewButtonHTML = `<button disabled style="margin-top:10px; background-color:gray; cursor:not-allowed;">Reviewed</button>`;
+                    } else {
+                        reviewButtonHTML = `<a href="review.html?event_id=${event.id}">
+                            <button style="margin-top:10px;">Review</button>
+                        </a>`;
+                    }
+                }
+
+                card.innerHTML = `
+                    <h4><strong>Title: </strong>${event.title}</h4>
+                    <p><strong>Description:</strong> ${event.description}</p>
+                    <p><strong>Date:</strong> ${new Date(event.date).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                })}</p>
+                    <p><strong>Status:</strong> ${event.status}</p>
+                    ${reviewButtonHTML}
+                `;
+                resultsContainer.appendChild(card);
+            }
+
+        } catch (err) {
+            console.error("Error fetching events:", err);
+            alert("Failed to load your requests.");
+        }
+    }
+
+    async function checkReviewExists(eventId) {
+        try {
+            const res = await fetch(`/api/check-review?eventId=${eventId}`);
+            const data = await res.json();
+            return data.hasReview;
+        } catch (err) {
+            console.error("Error checking review:", err);
+            return false;
+        }
+    }
+</script>
+
+
+</body>
+</html>
